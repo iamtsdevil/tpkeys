@@ -1,5 +1,5 @@
 import fetch from "cross-fetch";
-
+import React from 'react';
 // Function to fetch user channel details
 const getUserChanDetails = async () => {
     let obj = { list: [] };
@@ -37,6 +37,7 @@ const getKey = async (id) => {
             break;
         }
     }
+    export default Tpkeys;
     return cKey;
 };
 
