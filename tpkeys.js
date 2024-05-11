@@ -1,59 +1,45 @@
-const mysql = require('mysql2/promise');
-const fetch = require('node-fetch'); // or use axios
+import fetch from "cross-fetch";
 
-// Function to fetch JSON data
-async function fetchJSONData(url) {
+// Function to fetch user channel details
+const getUserChanDetails = async () => {
+    let obj = { list: [] };
+
     try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching JSON data:', error);
-        return null;
-    }
-}
+        const responseChannels = await fetch("https://tplayapi.code-crafters.app/321codecrafters/fetcher.json");
+        const cData = await responseChannels.json();
 
-// Function to insert data into MySQL database
-async function insertDataIntoDatabase(data) {
-    try {
-        // Create MySQL connection
-        const connection = await mysql.createConnection({
-            host: 'localhost',
-            user: 'your_mysql_username',
-            password: 'your_mysql_password',
-            database: 'your_database_name'
-        });
-
-        // Iterate over each channel
-        for (const channel of data[0].data.channels) {
-            const id = channel.id;
-            const clearkey = channel.clearkeys && channel.clearkeys.length > 0 ? JSON.stringify(channel.clearkeys[0].base64) : null;
-
-            // Insert data into database
-            if (id && clearkey) {
-                await connection.execute('INSERT INTO clearkeys (id, clearkey) VALUES (?, ?)', [id, clearkey]);
-            }
+        if (cData && cData.data && Array.isArray(cData.data.channels)) {
+            const flatChannels = cData.data.channels.flat();
+            flatChannels.forEach(channel => {
+                let rearrangedChannel = {
+                    id: channel.id,
+                    clearkey: channel.clearkeys ? JSON.stringify(channel.clearkeys[0].base64) : null
+                };
+                obj.list.push(rearrangedChannel);
+            });
         }
-
-        // Close MySQL connection
-        await connection.end();
     } catch (error) {
-        console.error('Error inserting data into database:', error);
+        console.error('Fetch error:', error);
+        return obj;
     }
-}
 
-// Main function
-async function main() {
-    const jsonDataUrl = 'https://tplayapi.code-crafters.app/321codecrafters/fetcher.json';
-    const jsonData = await fetchJSONData(jsonDataUrl);
+    return obj;
+};
 
-    if (jsonData) {
-        await insertDataIntoDatabase(jsonData);
-        console.log('Data inserted into database successfully.');
-    } else {
-        console.log('Failed to fetch JSON data.');
+// Function to get the key based on ID
+const getKey = async (id) => {
+    let cKey = '';
+    let data = await getUserChanDetails();
+    let dataList = data.list;
+    for(let i = 0; i < dataList.length; i++){
+        if(dataList[i].id === id){
+            cKey = dataList[i].clearkey;
+            break;
+        }
     }
-}
+    return cKey;
+};
 
-// Execute main function
-main();
+// Exporting the functions as an object
+export { getUserChanDetails, getKey };
+
