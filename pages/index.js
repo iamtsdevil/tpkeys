@@ -1,6 +1,6 @@
 // Import your script file
 import { getUserChanDetails, getKey } from './tpkeys.js';
-
+export default function Home() {
 // Define the serverless function
 module.exports = async (req, res) => {
     const id = req.query.id; // Get the value of 'id' query parameter
